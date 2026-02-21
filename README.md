@@ -43,8 +43,8 @@ npm install -g @638labs/mcp-server
       "type": "stdio",
       "command": "638labs-mcp",
       "env": {
-        "GATEWAY_URL": "https://gateway.638labs.com",
-        "API_URL": "https://app.638labs.com",
+        "GATEWAY_URL": "https://st0.638labs.com",
+        "API_URL": "https://api.638labs.com",
         "STOLABS_API_KEY": "your-api-key-here"
       }
     }
@@ -62,8 +62,8 @@ npm install -g @638labs/mcp-server
       "command": "node",
       "args": ["/path/to/node_modules/@638labs/mcp-server/server.mjs"],
       "env": {
-        "GATEWAY_URL": "https://gateway.638labs.com",
-        "API_URL": "https://app.638labs.com",
+        "GATEWAY_URL": "https://st0.638labs.com",
+        "API_URL": "https://api.638labs.com",
         "STOLABS_API_KEY": "your-api-key-here"
       }
     }
@@ -74,8 +74,8 @@ npm install -g @638labs/mcp-server
 **Or from source:**
 
 ```bash
-git clone https://github.com/638labs/mcp-server.git
-cd mcp-server
+git clone https://github.com/638labs/638labs-mcp-server.git
+cd 638labs-mcp-server
 npm install
 cp .env.example .env   # edit with your API key
 ```
