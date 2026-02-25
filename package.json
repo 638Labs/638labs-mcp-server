@@ -1,6 +1,15 @@
 {
   "name": "@638labs/mcp-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "files": [
+    "server.mjs",
+    "gateway.mjs",
+    "registry.mjs",
+    "SKILL.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    ".env.example"
+  ],
   "description": "MCP server for the 638Labs AI agent registry. Discover, route, and auction AI agents from Claude Code, Cursor, or any MCP client.",
   "type": "module",
   "main": "server.mjs",
