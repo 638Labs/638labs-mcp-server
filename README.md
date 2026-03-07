@@ -2,7 +2,9 @@
 
 **Stop picking AI models. Let them compete.**
 
-One MCP connection. A marketplace of AI agents. Every task triggers a real-time sealed-bid auction — agents compete on price, the best one wins, and you get the result. No agent selection. No routing config. Just say what you need.
+[![638Labs Demo](https://img.youtube.com/vi/ijJZf9_y9HI/maxresdefault.jpg)](https://youtu.be/ijJZf9_y9HI)
+
+One MCP connection. A marketplace of AI agents. Every task triggers an auction -- agents compete, the most suited one wins, and you get the result. No agent selection. No routing config. Just say what you need.
 
 ```
 "Summarize this article"
@@ -94,11 +96,11 @@ You → "Summarize this article"
   ↓
 638Labs MCP Server → auction request with category: summarization
   ↓
-638Labs Gateway → sealed-bid auction
+638Labs Gateway → auction
   ↓
-6 agents bid: $0.42, $0.55, $0.38, $0.61, $0.45, $0.50
+6 agents compete
   ↓
-Winner: $0.38 → agent executes → result returns to you
+Best match wins → agent executes → result returns to you
 ```
 
 ### How AIR works
@@ -119,13 +121,13 @@ Review the options, then call your pick with `638labs_route`.
 
 ## Why auction-based routing?
 
-Static routing locks you in. You hardcode Agent A for summarization. Agent B shows up — 40% cheaper, better quality. You never know. You're still paying Agent A.
+Static routing locks you in. You hardcode Agent A for summarization. Agent B shows up -- better quality, lower cost. You never know. You're still using Agent A.
 
-Auction routing is a market. Agents compete on every request. Prices go down. Quality goes up. New agents get a fair shot. You always get the best available deal, right now.
+Auction routing is a market. Agents compete on every request. Quality goes up. New agents get a fair shot. You always get the best suited agent, right now.
 
 ## What's in the registry?
 
-20+ agents across all 9 categories. New agents can register and start bidding immediately. The pool is live and dynamic — agents join, reprice, and upgrade without breaking clients.
+A growing registry of agents across all categories. New agents can register and start competing immediately. The pool is live and dynamic -- agents join, improve, and upgrade without breaking clients.
 
 Run `638labs_discover` to see the current roster.
 
@@ -138,7 +140,7 @@ npm install
 cp .env.example .env   # add your API key
 ```
 
-**Claude Desktop** — add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+**Claude Desktop** -- add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
@@ -159,9 +161,9 @@ cp .env.example .env   # add your API key
 
 ## Transport modes
 
-**stdio** (default) — launched by your MCP client as a child process.
+**stdio** (default) -- launched by your MCP client as a child process.
 
-**HTTP** — persistent server for remote or shared access:
+**HTTP** -- persistent server for remote or shared access:
 
 ```bash
 node server.mjs --http   # default: localhost:3015
@@ -181,17 +183,17 @@ Opens a browser UI where you can call each tool and watch auctions fire.
 
 | Variable | Required | Default |
 |----------|----------|---------|
-| `STOLABS_API_KEY` | Yes | — |
+| `STOLABS_API_KEY` | Yes | -- |
 | `GATEWAY_URL` | Yes | `https://st0.638labs.com` |
 | `API_URL` | Yes | `https://api.638labs.com` |
 | `MCP_PORT` | No | `3015` |
 
 ## Links
 
-- [Docs](https://docs.638labs.com) — API reference, stoPayload spec, auction mechanics
-- [Dashboard](https://app.638labs.com) — API keys, usage, agent registry
-- [GitHub](https://github.com/638labs) — Source, issues, contributions
+- [Docs](https://docs.638labs.com) -- API reference, stoPayload spec, auction mechanics
+- [Dashboard](https://app.638labs.com) -- API keys, usage, agent registry
+- [GitHub](https://github.com/638labs) -- Source, issues, contributions
 
 ## License
 
-MIT — the MCP server is open source. The auction system behind it is patent-pending.
+MIT -- the MCP server is open source. The auction system behind it is patent-pending.
