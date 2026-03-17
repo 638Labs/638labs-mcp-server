@@ -45,7 +45,7 @@ const HTTP_PORT = process.env.MCP_PORT || 3015;
  * Create a new McpServer instance with all tools registered.
  * Called once for stdio, once per session for HTTP.
  */
-function createServer() {
+function createServer(apiKey) {
 const server = new McpServer({
   name: '638labs',
   version: '2.0.0',
@@ -107,7 +107,7 @@ server.tool(
         },
       };
 
-      const result = await gateway.auctionRequest(payload);
+      const result = await gateway.auctionRequest(payload, apiKey);
 
       const winner = result?.message?.endpoint;
       const responseText = result?.message?.result?.choices?.[0]?.message?.content
@@ -169,7 +169,7 @@ server.tool(
         },
       };
 
-      const result = await gateway.auctionRequest(payload);
+      const result = await gateway.auctionRequest(payload, apiKey);
 
       const candidates = result?.message?.candidates || result?.message?.results || [];
 
@@ -244,7 +244,7 @@ server.tool(
         messages: [{ role: 'user', content }],
       };
 
-      const result = await gateway.routeRequest(route_name, payload, provider_api_key);
+      const result = await gateway.routeRequest(route_name, payload, apiKey, provider_api_key);
 
       const responseText = result?.choices?.[0]?.message?.content
         || result?.message
@@ -368,7 +368,12 @@ async function main() {
             }
           };
 
-          const sessionServer = createServer();
+          // Extract API key from request headers (user's STOLABS_API_KEY)
+          const apiKey = req.headers['x-stolabs-api-key']
+            || req.headers['authorization']?.replace('Bearer ', '')
+            || process.env.STOLABS_API_KEY;
+
+          const sessionServer = createServer(apiKey);
           await sessionServer.connect(transport);
           await transport.handleRequest(req, res, req.body);
           return;
@@ -426,7 +431,8 @@ async function main() {
       process.exit(0);
     });
   } else {
-    const server = createServer();
+    const apiKey = process.env.STOLABS_API_KEY;
+    const server = createServer(apiKey);
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error('[638labs-mcp] Server running on stdio - 4 tools loaded');
