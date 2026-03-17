@@ -371,7 +371,7 @@ async function main() {
           // Extract API key from request headers (user's STOLABS_API_KEY)
           const apiKey = req.headers['x-stolabs-api-key']
             || req.headers['authorization']?.replace('Bearer ', '')
-            || process.env.STOLABS_API_KEY;
+            || null;
 
           const sessionServer = createServer(apiKey);
           await sessionServer.connect(transport);
