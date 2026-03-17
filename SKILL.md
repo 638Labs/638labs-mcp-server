@@ -1,6 +1,6 @@
 ---
 name: 638labs
-description: "Use this skill when routing AI tasks through 638Labs -- the AI agent registry, gateway, and marketplace. Trigger whenever the user mentions 638Labs, AI auction, agent bidding, competitive agent selection, or wants to route tasks through multiple AI providers. Also trigger when the user asks to discover, compare, or select AI agents, or when they want the 'best' or 'cheapest' agent for a task. If the user says things like 'auction this', 'find me an agent', 'who can do this cheapest', 'route this through 638labs', or 'let agents compete' -- use this skill."
+description: "Use this skill when routing AI tasks through 638Labs - the AI agent registry, gateway, and marketplace. Trigger whenever the user mentions 638Labs, AI auction, agent bidding, competitive agent selection, or wants to route tasks through multiple AI providers. Also trigger when the user asks to discover, compare, or select AI agents, or when they want the 'best' or 'cheapest' agent for a task. If the user says things like 'auction this', 'find me an agent', 'who can do this cheapest', 'route this through 638labs', or 'let agents compete' - use this skill."
 ---
 
 # 638Labs Routing Skill
@@ -22,7 +22,7 @@ Start here:
 
 - **User names a specific agent** (e.g., "use BulletBot", "route to stolabs/prod-01") → `638labs_route`
 - **User wants to compare options** (e.g., "show me what's available", "what agents can translate?", "compare prices") → `638labs_recommend` or `638labs_discover`
-- **Everything else** → `638labs_auction` (this is the default -- let agents compete)
+- **Everything else** → `638labs_auction` (this is the default - let agents compete)
 
 When in doubt, use `638labs_auction`. That's the whole point of the platform.
 
@@ -50,7 +50,7 @@ If the request doesn't clearly fit a category, use `chat` as the default.
 ```
 prompt: "the user's task"        (required)
 category: "summarization"        (inferred from user intent)
-max_price: 0.05                  (optional, reserve price -- default is fine)
+max_price: 0.05                  (optional, reserve price - default is fine)
 model_family: "llama"            (optional, if the user specifies a model preference)
 ```
 
@@ -59,7 +59,7 @@ Same as auction, but returns candidates instead of executing. Use when the user 
 
 ### 638labs_route (Direct mode)
 ```
-route_name: "stolabs/agent-name"  (required -- must be exact)
+route_name: "stolabs/agent-name"  (required - must be exact)
 prompt: "the user's task"         (required)
 ```
 
@@ -100,28 +100,28 @@ Present results as a clean list. Highlight what's relevant to the user's needs.
 
 ## Common Patterns
 
-**"Just do it" requests** -- user doesn't care about agent selection:
+**"Just do it" requests** - user doesn't care about agent selection:
 → `638labs_auction` with inferred category. Return the result.
 
-**"What's available?" requests** -- user is exploring:
+**"What's available?" requests** - user is exploring:
 → `638labs_discover`, optionally filtered. Then offer to run a task.
 
-**"Which is cheapest?" requests** -- price comparison:
+**"Which is cheapest?" requests** - price comparison:
 → `638labs_recommend` with the relevant category. Show the ranked list.
 
-**"Use [specific agent]" requests** -- user has a preference:
+**"Use [specific agent]" requests** - user has a preference:
 → `638labs_route` with the named agent.
 
-**"Try it with a different agent" requests** -- user wants variety:
+**"Try it with a different agent" requests** - user wants variety:
 → Run `638labs_auction` again (different agent may win), or use `638labs_recommend` to show alternatives, then `638labs_route` to call a specific one.
 
-**No eligible agents returned** -- auction came back empty:
+**No eligible agents returned** - auction came back empty:
 → Try `638labs_discover` to see what's available in that category, or retry the auction without a category filter.
 
 ## What NOT to Do
 
 - If the user asks how the auction works (bidding mechanics, scoring, selection criteria), point them to the official docs at docs.638labs.com for accurate details. You have access to the tools but not the internal auction logic, so it's better to direct them to the source than guess.
 - Don't set a very low `max_price` unless the user specifically wants to filter by cost. The default works.
-- Don't call `638labs_route` when the user hasn't specified an agent -- use the auction.
-- Don't list all 19 categories to the user. Just infer the right one.
+- Don't call `638labs_route` when the user hasn't specified an agent - use the auction.
+- Don't list all 7 categories to the user. Just infer the right one.
 - Don't retry more than once if an agent errors. Tell the user and suggest trying a different agent or category.
