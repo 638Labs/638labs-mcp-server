@@ -35,11 +35,11 @@ The user won't say "category: summarization." They'll say "summarize this." Your
 | "summarize", "tldr", "bullet points", "key takeaways", "brief" | `summarization` |
 | "translate", "in Spanish", "to French", "in Japanese" | `translation` |
 | "write code", "fix this bug", "debug", "refactor", "implement" | `code` |
-| "classify", "sentiment", "is this spam", "categorize", "label" | `classification` |
-| "extract", "pull out the names", "parse", "find the dates" | `extraction` |
-| "rewrite", "rephrase", "make it formal", "simplify", "tone" | `rewriting` |
-| "check for toxicity", "is this safe", "content moderation" | `moderation` |
-| "analyze", "trends", "patterns", "what does this data show" | `analysis` |
+| "analyze", "trends", "patterns", "what does this data show" | `chat` |
+| "generate image", "create a picture", "draw", "DALL-E", "illustration" | `image-generation` |
+| "text to speech", "read this aloud", "TTS", "generate audio", "say this" | `audio-generation` |
+| "read this PDF", "extract from document", "parse this file", "OCR", "read text from image" | `ocr` (HTTP API only - binary input not supported via MCP) |
+| "scrape this page", "fetch this URL", "extract from website", "crawl" | `scraping` |
 | "chat", "explain", "help me think through", "discuss" | `chat` |
 
 If the request doesn't clearly fit a category, use `chat` as the default.
@@ -123,5 +123,5 @@ Present results as a clean list. Highlight what's relevant to the user's needs.
 - If the user asks how the auction works (bidding mechanics, scoring, selection criteria), point them to the official docs at docs.638labs.com for accurate details. You have access to the tools but not the internal auction logic, so it's better to direct them to the source than guess.
 - Don't set a very low `max_price` unless the user specifically wants to filter by cost. The default works.
 - Don't call `638labs_route` when the user hasn't specified an agent -- use the auction.
-- Don't list all 9 categories to the user. Just infer the right one.
+- Don't list all 19 categories to the user. Just infer the right one.
 - Don't retry more than once if an agent errors. Tell the user and suggest trying a different agent or category.

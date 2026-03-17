@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
 /*
-  638Labs MCP Server — The Battledome
+  638Labs MCP Server - The Battledome
 
   4 tools. One auction. N agents. Best agent wins.
 
   Tools:
-    638labs_auction   — AIX mode. Submit a job, agents compete, winner executes.
-    638labs_recommend — AIR mode. Get ranked candidates, no execution.
-    638labs_route     — Direct mode. Call a specific agent by name.
-    638labs_discover  — Browse the registry. No filters = list all.
+    638labs_auction   - AIX mode. Submit a job, agents compete, winner executes.
+    638labs_recommend - AIR mode. Get ranked candidates, no execution.
+    638labs_route     - Direct mode. Call a specific agent by name.
+    638labs_discover  - Browse the registry. No filters = list all.
 
   Two transport modes:
-    stdio (default) — launched by Claude Code / MCP Inspector as a child process
-    http            — runs as a persistent HTTP service for remote clients (Streamable HTTP)
+    stdio (default) - launched by Claude Code / MCP Inspector as a child process
+    http            - runs as a persistent HTTP service for remote clients (Streamable HTTP)
 
   Usage:
     node server.mjs          # stdio mode (local, launched by MCP client)
@@ -41,6 +41,11 @@ import * as gateway from './gateway.mjs';
 const MODE = process.argv.includes('--http') ? 'http' : 'stdio';
 const HTTP_PORT = process.env.MCP_PORT || 3015;
 
+/**
+ * Create a new McpServer instance with all tools registered.
+ * Called once for stdio, once per session for HTTP.
+ */
+function createServer() {
 const server = new McpServer({
   name: '638labs',
   version: '2.0.0',
@@ -51,19 +56,39 @@ const server = new McpServer({
 // ========================
 server.tool(
   '638labs_auction',
-  'Run an AI agent auction. Agents compete in a real-time sealed-bid auction — the best agent wins and executes your task. Submit any prompt: summarize, translate, code, chat, analyze, classify, extract, rewrite, moderate — the auction finds the right agent and the right price.',
+  'Run an AI agent auction. Agents compete in a real-time sealed-bid auction - the best agent wins and executes your task. Submit any prompt: summarize, translate, code, chat, analyze, classify, extract, rewrite, moderate, OCR - the auction finds the right agent and the right price. For file-based tasks (OCR, PDF extraction), pass the file as base64 in the input parameter or provide a URL via file_url.',
   {
     prompt: z.string().describe('The prompt or task to send to the auction'),
-    category: z.string().optional().describe('Filter bidding agents by category (e.g., "chat", "summarization", "code", "translation", "analysis", "classification", "extraction", "rewriting", "moderation")'),
+    input: z.string().optional().describe('Base64-encoded file data for file-based tasks (OCR, PDF extraction, image processing)'),
+    file_url: z.string().optional().describe('URL of a file to process (e.g., "https://example.com/image.png"). Use this instead of input for large files.'),
+    file_type: z.string().optional().describe('MIME type of the input file (e.g., "image/png", "image/jpeg", "application/pdf"). Required when input is provided.'),
+    category: z.string().optional().describe('Filter bidding agents by category (e.g., "chat", "summarization", "code", "translation", "analysis", "classification", "extraction", "rewriting", "moderation", "ocr", "document")'),
     max_price: z.number().optional().describe('Maximum price you are willing to pay (reserve price)'),
     model_family: z.string().optional().describe('Filter by model family (e.g., "gpt", "claude", "cohere", "llama")'),
     model_flavour: z.string().optional().describe('Filter by specific model (e.g., "gpt-4o", "command-r"). Use "any" to allow all.'),
   },
-  async ({ prompt, category, max_price, model_family, model_flavour }) => {
+  async ({ prompt, input, file_url, file_type, category, max_price, model_family, model_flavour }) => {
     try {
+      // Build message content: URL, base64, or plain text
+      let content;
+      if (file_url) {
+        content = [
+          { type: 'image_url', image_url: { url: file_url } },
+          { type: 'text', text: prompt },
+        ];
+      } else if (input) {
+        const mimeType = file_type || 'image/png';
+        content = [
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${input}` } },
+          { type: 'text', text: prompt },
+        ];
+      } else {
+        content = prompt;
+      }
+
       const payload = {
         model: 'default',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content }],
         stream: false,
         stoPayload: {
           stoAuction: {
@@ -154,7 +179,7 @@ server.tool(
           const bid = c.bid_price != null ? `$${c.bid_price}` : 'N/A';
           const rep = c.reputation_score != null ? c.reputation_score.toFixed(2) : 'unranked';
           const cat = c.category || 'unknown';
-          return `${i + 1}. **${name}** — bid: ${bid}, reputation: ${rep}, category: ${cat}`;
+          return `${i + 1}. **${name}** - bid: ${bid}, reputation: ${rep}, category: ${cat}`;
         }).join('\n');
 
         return {
@@ -186,18 +211,37 @@ server.tool(
 // ========================
 server.tool(
   '638labs_route',
-  'Send a request directly to a specific AI agent by name. No auction, no competition — just a straight call through the 638Labs gateway. Use this when you already know which agent you want (e.g., from a previous recommendation or discovery).',
+  'Send a request directly to a specific AI agent by name. No auction, no competition - just a straight call through the 638Labs gateway. Use this when you already know which agent you want (e.g., from a previous recommendation or discovery). For file-based tasks, pass the file as base64 in the input parameter or provide a URL via file_url.',
   {
     route_name: z.string().describe('The agent route name (e.g., "stolabs/prod-01" or "your-org/agent-v2")'),
     prompt: z.string().describe('The prompt or message to send to the agent'),
+    input: z.string().optional().describe('Base64-encoded file data for file-based tasks (OCR, PDF extraction, image processing)'),
+    file_url: z.string().optional().describe('URL of a file to process (e.g., "https://example.com/image.png"). Use this instead of input for large files.'),
+    file_type: z.string().optional().describe('MIME type of the input file (e.g., "image/png", "image/jpeg", "application/pdf"). Required when input is provided.'),
     model: z.string().optional().describe('Optional model override for the target endpoint'),
     provider_api_key: z.string().optional().describe('Optional API key for external providers (OpenAI, Cohere, etc.)'),
   },
-  async ({ route_name, prompt, model, provider_api_key }) => {
+  async ({ route_name, prompt, input, file_url, file_type, model, provider_api_key }) => {
     try {
+      let content;
+      if (file_url) {
+        content = [
+          { type: 'image_url', image_url: { url: file_url } },
+          { type: 'text', text: prompt },
+        ];
+      } else if (input) {
+        const mimeType = file_type || 'image/png';
+        content = [
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${input}` } },
+          { type: 'text', text: prompt },
+        ];
+      } else {
+        content = prompt;
+      }
+
       const payload = {
         model: model || 'default',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content }],
       };
 
       const result = await gateway.routeRequest(route_name, payload, provider_api_key);
@@ -226,7 +270,7 @@ server.tool(
 // ========================
 server.tool(
   '638labs_discover',
-  'Browse the 638Labs AI agent registry. Search by category, model family, or capability — or call with no filters to list everything available. Use this to see what agents exist before running an auction or routing directly.',
+  'Browse the 638Labs AI agent registry. Search by category, model family, or capability - or call with no filters to list everything available. Use this to see what agents exist before running an auction or routing directly.',
   {
     category: z.string().optional().describe('Filter by category (e.g., "chat", "summarization", "code", "data", "translation")'),
     model_family: z.string().optional().describe('Filter by model family (e.g., "gpt", "claude", "cohere", "llama")'),
@@ -273,7 +317,7 @@ server.tool(
       return {
         content: [{
           type: 'text',
-          text: `638Labs Registry — ${results.length} agent(s):\n\n${JSON.stringify(results, null, 2)}`
+          text: `638Labs Registry - ${results.length} agent(s):\n\n${JSON.stringify(results, null, 2)}`
         }]
       };
     } catch (err) {
@@ -285,6 +329,9 @@ server.tool(
   }
 );
 
+return server;
+}
+
 // ========================
 // Start
 // ========================
@@ -295,7 +342,7 @@ async function main() {
 
     const transports = {};
 
-    // Streamable HTTP endpoint — all MCP communication on /mcp
+    // Streamable HTTP endpoint - all MCP communication on /mcp
     app.post('/mcp', async (req, res) => {
       const sessionId = req.headers['mcp-session-id'];
 
@@ -321,7 +368,8 @@ async function main() {
             }
           };
 
-          await server.connect(transport);
+          const sessionServer = createServer();
+          await sessionServer.connect(transport);
           await transport.handleRequest(req, res, req.body);
           return;
         } else {
@@ -346,7 +394,7 @@ async function main() {
       }
     });
 
-    // GET /mcp — SSE stream for server-initiated messages
+    // GET /mcp - SSE stream for server-initiated messages
     app.get('/mcp', async (req, res) => {
       const sessionId = req.headers['mcp-session-id'];
       if (!sessionId || !transports[sessionId]) {
@@ -356,7 +404,7 @@ async function main() {
       await transports[sessionId].handleRequest(req, res);
     });
 
-    // DELETE /mcp — session termination
+    // DELETE /mcp - session termination
     app.delete('/mcp', async (req, res) => {
       const sessionId = req.headers['mcp-session-id'];
       if (!sessionId || !transports[sessionId]) {
@@ -378,9 +426,10 @@ async function main() {
       process.exit(0);
     });
   } else {
+    const server = createServer();
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error('[638labs-mcp] Server running on stdio — 4 tools loaded');
+    console.error('[638labs-mcp] Server running on stdio - 4 tools loaded');
   }
 }
 

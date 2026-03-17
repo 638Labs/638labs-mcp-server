@@ -33,6 +33,7 @@ export async function routeRequest(routeName, payload, providerApiKey) {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(60000),
   });
 
   if (!response.ok) {
